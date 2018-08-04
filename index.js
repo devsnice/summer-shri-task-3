@@ -1,3 +1,9 @@
 const data = require("./mock");
 
-console.log(data);
+const solution = data => {
+  console.log(data);
+};
+
+solution(data);
+
+module.exports = solution;
