@@ -20,6 +20,48 @@ describe("Tests for task", () => {
 
       expect(result.consumedEnergy.value).toBe(mockData.output.consumedEnergy.value);
     });
+
+    test("should return correct solution in case when device sorting define result", () => {
+      const input = {
+        devices: [
+          {
+            id: "1",
+            name: "Посудомоечная машина",
+            power: 100,
+            duration: 12
+          },
+          {
+            id: "2",
+            name: "Духовка",
+            power: 150,
+            duration: 12
+          }
+        ],
+        rates: [
+          {
+            from: 7,
+            to: 19,
+            value: 1
+          },
+          {
+            from: 19,
+            to: 7,
+            value: 3
+          }
+        ],
+        maxPower: 200
+      };
+
+      const output = {
+        consumedEnergy: {
+          value: 5.4
+        }
+      };
+
+      const result = solution(input);
+
+      expect(result.consumedEnergy.value).toBe(output.consumedEnergy.value);
+    });
   });
 
   describe("test utilites", () => {
