@@ -1,20 +1,34 @@
 const data = require("./mocks/mock");
 
+const DAY_BEGIN_HOUR = 7;
+const DAY_END_HOUR = 21;
+
 /**
- * There's greedy algorithm consisted from next steps:
+ * There's greedy algorithm consisted from these steps:
  *
- * 1) Take devices from List
+ * 1) Take device from List
  * 2) Find a slot in the schedule, which has the minimal rate
  * 3) Repeat
+ *
+ *
+ * For convinient work I transform hours origin to 0 - 24 hours.
+ *
+ * Where:
+ *  0 is begin of the day.
+ *  14 is end of the day.
+ *  14 is begin of the night
+ *  23 is end of the night.
+ *
+ * After calculation result schedule I tranform it back.
  */
 const solution = data => {
   const { devices, rates, maxPower } = data;
 
-  // Transform hours origin to 0 - 24 hours for convenient work
   const hashDaySchedule = createEmptyDaySchedule();
   const hashRates = createHourRateHash(rates);
   const hashDevices = createDevicesHash(devices);
 
+  // get all devices
   while (devices.length) {
     const device = devices.pop();
 
@@ -47,8 +61,16 @@ const solution = data => {
  * It is looking for a slot with minimum power rate
  * inside a period when device can work
  *
- * @param {*} device
- * @returns {*} slot
+ * @param {HashDaySchedule} hashDaySchedule
+ * @param {HashRates} hashRates
+ * @param {Number} maxPower
+ * @param {Device} device
+ *
+ * @returns {
+ *  from: Number,
+ *  to: Number,
+ *  value: Number
+ * } Slot
  */
 const findSlot = ({ hashDaySchedule, hashRates, maxPower, device }) => {
   const { duration, mode } = device;
@@ -102,7 +124,10 @@ const findSlot = ({ hashDaySchedule, hashRates, maxPower, device }) => {
 };
 
 /**
+ * Creates a day schedule,
+ * it hash which holds information about every hour of day.
  *
+ * We consider, that day begins at 0:00
  */
 const createEmptyDaySchedule = () => {
   const schedule = {};
@@ -119,18 +144,18 @@ const createEmptyDaySchedule = () => {
 
 /**
  *
- * @param {*} mode
+ * @param {String} mode
  */
 const getPeriodForDevice = mode => {
   const partOfDay = mode || "allDay";
 
   const periods = {
     day: {
-      beginPeriod: 0,
-      endPeriod: 21 - 7
+      beginPeriod: DAY_BEGIN_HOUR - DAY_BEGIN_HOUR,
+      endPeriod: DAY_END_HOUR - DAY_BEGIN_HOUR
     },
     night: {
-      beginPeriod: 21 - 7,
+      beginPeriod: DAY_END_HOUR - DAY_BEGIN_HOUR,
       endPeriod: 24
     },
     allDay: {
@@ -143,17 +168,17 @@ const getPeriodForDevice = mode => {
 };
 
 /**
- *
- * @param {*} rates
+ * @param {RatesArray} rates
+ * @returns {RatesHash} information about rate in an any hour
  */
 const createHourRateHash = rates => {
   const hash = {};
 
   rates.forEach(rate => {
     // transform time origin to 0:00 - 23:00
-    const rateTo = rate.to - 7 <= 0 ? rate.to - 7 + 24 : rate.to;
+    const rateTo = rate.to - DAY_BEGIN_HOUR <= 0 ? rate.to - 7 + 24 : rate.to;
 
-    for (let hour = rate.from - 7; hour < rateTo; hour++) {
+    for (let hour = rate.from - DAY_BEGIN_HOUR; hour < rateTo; hour++) {
       hash[hour] = rate.value;
     }
   });
@@ -162,8 +187,8 @@ const createHourRateHash = rates => {
 };
 
 /**
- *
- * @param {*} devices
+ * @param {DevicesArray} devices
+ * @param {DevicesHash} hash of devices for convient work
  */
 const createDevicesHash = devices => {
   const hash = {};
@@ -175,12 +200,18 @@ const createDevicesHash = devices => {
   return hash;
 };
 
+/**
+ * Format result daySchedule to output format.
+ *
+ * @param {HashDaySchedule} hashDaySchedule
+ * @param {OutputDevicesSchedule}
+ */
 const getFormattedDevicesSchedule = hashDaySchedule => {
   const hash = {};
 
   Object.values(hashDaySchedule).map((hourSchedule, hour) => {
     // transform time origin to 07:00 - 06:00
-    const correctHour = (hour + 7) % 24;
+    const correctHour = (hour + DAY_BEGIN_HOUR) % 24;
 
     hash[correctHour] = hourSchedule.devices;
   });
@@ -190,10 +221,11 @@ const getFormattedDevicesSchedule = hashDaySchedule => {
 
 /**
  * Calculate consumed energy for day schedule
+ * And returns result in the output format.
  *
- * @param {*} schedule
- * @param {*} hashRates
- * @param {*} hashDevices
+ * @param {HashDaySchedule} schedule
+ * @param {HashRates} hashRates
+ * @param {HashDevices} hashDevices
  */
 const calculateConsumedEnergy = (schedule, hashRates, hashDevices) => {
   let consumedEnergy = 0;
@@ -225,4 +257,16 @@ const calculateConsumedEnergy = (schedule, hashRates, hashDevices) => {
   };
 };
 
-module.exports = solution;
+module.exports = {
+  // solution function
+  solution,
+
+  // exported for tests
+  findSlot,
+  createEmptyDaySchedule,
+  getPeriodForDevice,
+  createHourRateHash,
+  createDevicesHash,
+  getFormattedDevicesSchedule,
+  calculateConsumedEnergy
+};
