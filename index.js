@@ -28,9 +28,14 @@ const solution = data => {
   const hashRates = createHourRateHash(rates);
   const hashDevices = createDevicesHash(devices);
 
+  // sort devices for finding better slots for devices, which needs more power
+  const sortedDevicesInOrderPowerConsumption = devices.sort((a, b) => {
+    b.duration * b.power - a.duration * a.power;
+  });
+
   // get all devices
-  while (devices.length) {
-    const device = devices.pop();
+  while (sortedDevicesInOrderPowerConsumption.length) {
+    const device = sortedDevicesInOrderPowerConsumption.pop();
 
     const slot = findSlot({
       hashDaySchedule,
