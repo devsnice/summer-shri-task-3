@@ -93,13 +93,11 @@ const findSlot = ({ hashDaySchedule, hashRates, maxPower, device }) => {
 
       if (usedPowerWillExceedMax) {
         isVariant = false;
+      } else {
+        const rateInThisHour = hashRates[currentHour];
 
-        return;
+        rateForThisSlot += rateInThisHour;
       }
-
-      const rateInThisHour = hashRates[currentHour];
-
-      rateForThisSlot += rateInThisHour;
     }
 
     // If current slot is convenient for device
@@ -118,6 +116,10 @@ const findSlot = ({ hashDaySchedule, hashRates, maxPower, device }) => {
         bestSlotVariant = slot;
       }
     }
+  }
+
+  if (!bestSlotVariant) {
+    throw new Error(`${device.id} has't slot in schedule`);
   }
 
   return bestSlotVariant;
@@ -176,7 +178,7 @@ const createHourRateHash = rates => {
 
   rates.forEach(rate => {
     // transform time origin to 0:00 - 23:00
-    const rateTo = rate.to - DAY_BEGIN_HOUR <= 0 ? rate.to - 7 + 24 : rate.to;
+    const rateTo = rate.to - DAY_BEGIN_HOUR <= 0 ? rate.to - DAY_BEGIN_HOUR + 24 : rate.to;
 
     for (let hour = rate.from - DAY_BEGIN_HOUR; hour < rateTo; hour++) {
       hash[hour] = rate.value;
@@ -260,6 +262,10 @@ const calculateConsumedEnergy = (schedule, hashRates, hashDevices) => {
 module.exports = {
   // solution function
   solution,
+
+  // constants
+  DAY_BEGIN_HOUR,
+  DAY_END_HOUR,
 
   // exported for tests
   findSlot,
