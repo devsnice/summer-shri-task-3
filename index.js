@@ -37,19 +37,23 @@ const solution = data => {
   while (sortedDevicesInOrderPowerConsumption.length) {
     const device = sortedDevicesInOrderPowerConsumption.pop();
 
-    const slot = findSlot({
-      hashDaySchedule,
-      hashRates,
-      maxPower,
-      device
-    });
+    try {
+      const slot = findSlot({
+        hashDaySchedule,
+        hashRates,
+        maxPower,
+        device
+      });
 
-    // Fill information in the schedule
-    for (let i = slot.from; i < slot.to; i++) {
-      hashDaySchedule[i] = {
-        usedPower: hashDaySchedule[i].usedPower + device.power,
-        devices: [...hashDaySchedule[i].devices, device.id]
-      };
+      // Fill information in the schedule
+      for (let i = slot.from; i < slot.to; i++) {
+        hashDaySchedule[i] = {
+          usedPower: hashDaySchedule[i].usedPower + device.power,
+          devices: [...hashDaySchedule[i].devices, device.id]
+        };
+      }
+    } catch (err) {
+      throw err;
     }
   }
 
@@ -124,7 +128,7 @@ const findSlot = ({ hashDaySchedule, hashRates, maxPower, device }) => {
   }
 
   if (!bestSlotVariant) {
-    throw new Error(`${device.id} has't slot in schedule`);
+    throw new Error(`Device with id ${device.id} hasn't slot in schedule`);
   }
 
   return bestSlotVariant;

@@ -64,6 +64,36 @@ describe("Tests for task", () => {
     });
   });
 
+  describe("test how solution throws errors", () => {
+    it("should throw error, when there isn't slots for all devices", () => {
+      const input = {
+        devices: [
+          {
+            id: "1",
+            name: "Посудомоечная машина",
+            power: 1000
+          }
+        ],
+        rates: [
+          {
+            from: 7,
+            to: 7,
+            value: 1
+          }
+        ],
+        maxPower: 200
+      };
+
+      try {
+        const result = solution(input);
+
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toEqual(new Error("Device with id 1 hasn't slot in schedule"));
+      }
+    });
+  });
+
   describe("test utilites", () => {
     describe("findSlot()", () => {
       let schedule;
